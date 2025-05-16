@@ -1,123 +1,200 @@
-<label for="cityName">City: </label>
-<input type="text" id="cityName" [formControl]="cityName" />
-<button (click)="getWeather()">
-  {{ isLoading ? "Loading" : "Get Weather" }}
-</button>
+<div class="weather-app">
+  <header>
+    <h1>Today's Weather Forecast</h1>
+  </header>
 
-@if (errorMessage) {
-<p class="error">{{ errorMessage }}</p>
-} @if (isLoading) {
-<p>Loading data...</p>
-} @if (weatherData) {
-<div class="weather-data">
-  <div class="hourly-data">
-    <h3>Hourly forecasts</h3>
+  <div class="search-bar">
+    <input
+      type="text"
+      id="cityName"
+      [formControl]="cityName"
+      placeholder="Enter city name..."
+      (keyup.enter)="getWeather()"
+    />
+    <button class="search-button" (click)="getWeather()">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        width="24"
+        height="24"
+      >
+        <path fill="none" d="M0 0h24v24H0z" />
+        <path
+          d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"
+          fill="currentColor"
+        />
+      </svg>
+    </button>
+  </div>
 
+  @if (errorMessage) {
+  <p class="error">{{ errorMessage }}</p>
+  } @if (isLoading) {
+  <p class="loading-message">Loading data...</p>
+  } @if (weatherData) {
+  <div class="forecast-container">
     <div class="time-selector">
       <button
         *ngFor="let hourIndex of [2, 8, 14, 20]"
         class="time-button"
         [class.active]="selectedHourIndex === hourIndex"
+        [class.first-button]="hourIndex === 2"
+        [class.last-button]="hourIndex === 20"
         (click)="selectHour(hourIndex)"
       >
-        {{
-          (weatherData.hourly.time[hourIndex] | date : "HH:mm") ||
-            hourIndex + ":00"
-        }}
+        <div class="time-icon">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            width="24"
+            height="24"
+          >
+            <path fill="none" d="M0 0h24v24H0z" />
+            <path
+              d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm1-8h4v2h-6V7h2v5z"
+              fill="currentColor"
+            />
+          </svg>
+        </div>
+        <div class="time">{{ hourIndex }}:00</div>
+        <div class="date">
+          {{ weatherData.hourly.time[hourIndex] | date : "d MMM" }}
+        </div>
+        <div class="temp">
+          {{ weatherData.hourly.temperature2m[hourIndex].toFixed(1) }}°C
+        </div>
       </button>
     </div>
 
     @if (selectedHourIndex !== null) {
-    <div class="forecast-card">
-      <div class="forecast-time">
-        {{ weatherData.hourly.time[selectedHourIndex] | date : "HH:mm" }}
+    <div class="weather-card">
+      <div class="location">
+        {{ cityName.value }}, {{ weatherData.timezone.slice(0, 2) }}
+      </div>
+      <div class="date-time">
+        {{
+          weatherData.hourly.time[selectedHourIndex]
+            | date : "EEEE d MMMM à HH:mm"
+        }}
       </div>
 
-      <div class="weather-icon-container">
-        @if (weatherData.hourly.weatherCode[selectedHourIndex] !== undefined) {
-        <img
-          [src]="
-            getWeatherInfo(
-              weatherData.hourly.weatherCode[selectedHourIndex],
-              selectedHourIndex
-            ).image
-          "
-          [alt]="
-            getWeatherInfo(
-              weatherData.hourly.weatherCode[selectedHourIndex],
-              selectedHourIndex
-            ).description
-          "
-          width="50"
-        />
-        <div class="weather-description">
-          {{
-            getWeatherInfo(
-              weatherData.hourly.weatherCode[selectedHourIndex],
-              selectedHourIndex
-            ).description
-          }}
+      <div class="current-weather">
+        <div class="weather-icon-large">
+          @if (weatherData.hourly.weatherCode[selectedHourIndex] !== undefined)
+          {
+          <img
+            [src]="
+              getWeatherInfo(
+                weatherData.hourly.weatherCode[selectedHourIndex],
+                selectedHourIndex
+              ).image
+            "
+            [alt]="
+              getWeatherInfo(
+                weatherData.hourly.weatherCode[selectedHourIndex],
+                selectedHourIndex
+              ).description
+            "
+          />
+          }
         </div>
-        }
+
+        <div class="temperature-display">
+          <div class="current-temp">
+            {{
+              weatherData.hourly.temperature2m[selectedHourIndex].toFixed(1)
+            }}°C
+          </div>
+          <div class="feels-like">
+            Feels like
+            {{
+              weatherData.hourly.apparentTemperature[selectedHourIndex].toFixed(
+                1
+              )
+            }}°C
+          </div>
+          <div class="weather-description">
+            {{
+              getWeatherInfo(
+                weatherData.hourly.weatherCode[selectedHourIndex],
+                selectedHourIndex
+              ).description
+            }}
+          </div>
+        </div>
       </div>
 
-      <div class="params-container">
-        <div class="param-card">
-          <div class="param-icon">🌡️</div>
-          <div class="param-value">
-            {{ weatherData.hourly.temperature2m[selectedHourIndex] }}°C
-          </div>
-          <div class="param-label">Temperature</div>
-        </div>
+      <div class="weather-details">
+        <h2>Weather Details</h2>
 
-        <div class="param-card">
-          <div class="param-icon">💧</div>
-          <div class="param-value">
-            {{ weatherData.hourly.relativeHumidity2m[selectedHourIndex] }}%
+        <div class="details-grid">
+          <div class="detail-item">
+            <div class="detail-icon humidity-icon"></div>
+            <div class="detail-info">
+              <div class="detail-label">Humidity</div>
+              <div class="detail-value">
+                {{
+                  weatherData.hourly.relativeHumidity2m[
+                    selectedHourIndex
+                  ].toFixed(1)
+                }}%
+              </div>
+            </div>
           </div>
-          <div class="param-label">Humidity</div>
-        </div>
 
-        <div class="param-card">
-          <div class="param-icon">💨</div>
-          <div class="param-value">
-            {{ weatherData.hourly.windSpeed10m[selectedHourIndex] }}
+          <div class="detail-item">
+            <div class="detail-icon wind-icon"></div>
+            <div class="detail-info">
+              <div class="detail-label">Wind</div>
+              <div class="detail-value">
+                {{
+                  weatherData.hourly.windSpeed10m[selectedHourIndex].toFixed(1)
+                }}
+                km/h
+              </div>
+            </div>
           </div>
-          <div class="param-label">Wind (km/h)</div>
-        </div>
 
-        <div class="param-card">
-          <div class="param-icon">👁️</div>
-          <div class="param-value">
-            {{ weatherData.hourly.visibility[selectedHourIndex] }}
+          <div class="detail-item">
+            <div class="detail-icon visibility-icon"></div>
+            <div class="detail-info">
+              <div class="detail-label">Visibility</div>
+              <div class="detail-value">
+                {{
+                  (
+                    weatherData.hourly.visibility[selectedHourIndex] / 1000
+                  ).toFixed(1)
+                }}
+                km
+              </div>
+            </div>
           </div>
-          <div class="param-label">Visibility (m)</div>
+
+          <div class="detail-item">
+            <div class="detail-icon cloud-icon"></div>
+            <div class="detail-info">
+              <div class="detail-label">Clouds</div>
+              <div class="detail-value">10.0%</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
     }
   </div>
 
-  <div class="daily-data">
-    <h3>Daily data</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Sunrise</th>
-          <th>Sunset</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (i of weatherData.daily.time.keys(); track i) {
-        <tr>
-          <td>{{ weatherData.daily.time[i] | date : "mediumDate" }}</td>
-          <td>{{ weatherData.daily.sunrise[i] | date : "HH:mm" }}</td>
-          <td>{{ weatherData.daily.sunset[i] | date : "HH:mm" }}</td>
-        </tr>
-        }
-      </tbody>
-    </table>
+  <div class="daily-summary">
+    <h3>Sunrise & Sunset</h3>
+    <div class="sun-times">
+      <div class="sunrise">
+        <div class="sun-icon sunrise-icon"></div>
+        <div>{{ weatherData.daily.sunrise[0] | date : "HH:mm" }}</div>
+      </div>
+      <div class="sunset">
+        <div class="sun-icon sunset-icon"></div>
+        <div>{{ weatherData.daily.sunset[0] | date : "HH:mm" }}</div>
+      </div>
+    </div>
   </div>
+  }
 </div>
-}

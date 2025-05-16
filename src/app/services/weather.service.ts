@@ -55,7 +55,7 @@ export class WeatherService {
       .pipe(
         map((body) => {
           if (!body.results || body.results.length === 0) {
-            throw new Error(`La ville "${city}" n'a pas été trouvée`);
+            throw new Error(`City "${city}" not found`);
           }
           return {
             longitude: body.results[0].longitude,
